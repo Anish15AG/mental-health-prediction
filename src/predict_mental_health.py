@@ -253,3 +253,15 @@ else:
 shap.summary_plot(shap_vals_to_plot, X_test_new, show=False)
 plt.savefig('models/shap_summary.png')
 plt.close()
+
+###############################################
+# 7. Save New Models and Artifacts
+###############################################
+# Save the new trained models, scaler, and selected features using joblib.
+os.makedirs("models", exist_ok=True)
+joblib.dump(rf_best_new, os.path.join("models", "new_random_forest_model.pkl"))
+joblib.dump(xgb_best_new, os.path.join("models", "new_xgboost_model.pkl"))
+joblib.dump(scaler_new, os.path.join("models", "new_scaler.pkl"))
+joblib.dump(top_features_new, os.path.join("models", "new_selected_features.pkl"))
+
+print("Data preprocessing, model training, and evaluation complete. Models and artifacts saved.")

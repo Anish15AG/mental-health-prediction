@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import os
+from llm_explanations import generate_explanation
 
 
 @st.cache_resource
@@ -89,6 +90,6 @@ if st.button("Predict"):
     st.write(predictions)
     
     # Generate and display the LLM explanation
-    #explanation = generate_explanation(user_input_df, predictions)
+    explanation = generate_explanation(user_input_df, predictions)
     st.subheader("Explanation and Recommendations")
     st.write(explanation)

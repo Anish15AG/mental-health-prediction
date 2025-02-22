@@ -236,3 +236,20 @@ plt.legend(title="Metrics", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.savefig("models/model_comparison.png")
 plt.show()
+
+###############################################
+# 6. SHAP Interpretation for New Random Forest Model
+###############################################
+# Create a SHAP explainer object for the new Random Forest model.
+explainer = shap.TreeExplainer(rf_best_new, X_train_new)
+shap_values = explainer.shap_values(X_test_new, check_additivity=False)
+# For binary classification, select the SHAP values corresponding to the positive class.
+if isinstance(shap_values, list):
+    shap_vals_to_plot = shap_values[1]
+else:
+    shap_vals_to_plot = shap_values
+
+# Generate and save a SHAP summary plot.
+shap.summary_plot(shap_vals_to_plot, X_test_new, show=False)
+plt.savefig('models/shap_summary.png')
+plt.close()

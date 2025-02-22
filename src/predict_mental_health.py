@@ -100,3 +100,123 @@ X_train_old, X_test_old, y_train_old, y_test_old = train_test_split(
 scaler_old = StandardScaler()
 X_train_old = scaler_old.fit_transform(X_train_old)
 X_test_old = scaler_old.transform(X_test_old)
+
+# Define hyperparameter grids for the old models.
+rf_params_old = {
+    'n_estimators': [100, 200, 500],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5],
+    'min_samples_leaf': [1, 2]
+}
+xgb_params_old = {
+    'n_estimators': [100, 200, 500],
+    'max_depth': [3, 6, 10],
+    'learning_rate': [0.01, 0.1, 0.2]
+}
+
+# Perform Grid Search with Cross-Validation for Random Forest using 'accuracy' as scoring.
+rf_grid_old = GridSearchCV(
+    RandomForestClassifier(random_state=42),
+    rf_params_old, cv=3, scoring='accuracy', n_jobs=-1
+)
+rf_grid_old.fit(X_train_old, y_train_old)
+rf_best_old = rf_grid_old.best_estimator_
+
+# Perform Grid Search for XGBoost using 'accuracy' as scoring.
+xgb_grid_old = GridSearchCV(
+    XGBClassifier(eval_metric='logloss', use_label_encoder=False),
+    xgb_params_old, cv=3, scoring='accuracy', n_jobs=-1
+)
+xgb_grid_old.fit(X_train_old, y_train_old)
+xgb_best_old = xgb_grid_old.best_estimator_
+
+# Evaluate the old models and store their metrics.
+metrics_rf_old = evaluate_model(rf_best_old, X_test_old, y_test_old, "Old Random Forest (suicidal)")
+metrics_xgb_old = evaluate_model(xgb_best_old, X_test_old, y_test_old, "Old XGBoost (suicidal)")
+
+
+###############################################
+# 4. NEW PIPELINE: Target = 'anxiety_diagnosis'
+###############################################
+# This section implements the improved pipeline using 'anxiety_diagnosis' as the target.
+
+# Separate features and target. Remove 'anxiety_diagnosis' and 'id' from features.
+X_new = data.drop(columns=['anxiety_diagnosis', 'id'], errors='ignore')
+y_new = data['anxiety_diagnosis']
+
+# Use a Random Forest to determine feature importance and select the top 10 features.
+rf_fs_new = RandomForestClassifier(random_state=42)
+rf_fs_new.fit(X_new, y_new)
+fi_new = pd.DataFrame({'Feature': X_new.columns, 'Importance': rf_fs_new.feature_importances_})
+fi_new.sort_values(by='Importance', ascending=False, inplace=True)
+top_features_new = fi_new["Feature"].values[:10]
+X_new = X_new[top_features_new]
+
+# Split the new data into training and testing sets.
+X_train_new, X_test_new, y_train_new, y_test_new = train_test_split(
+    X_new, y_new, test_size=0.2, random_state=42
+)
+
+# Standardize features for the new pipeline.
+scaler_new = StandardScaler()
+X_train_new = scaler_new.fit_transform(X_train_new)
+X_test_new = scaler_new.transform(X_test_new)
+
+# Compute the ratio of negative to positive cases for XGBoost to handle class imbalance.
+neg_count_new = sum(y_train_new == 0)
+pos_count_new = sum(y_train_new == 1)
+scale_pos_weight_new = neg_count_new / pos_count_new if pos_count_new != 0 else 1
+
+# Define hyperparameter grids for the new models.
+rf_params_new = {
+    'n_estimators': [100, 200, 500],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5],
+    'min_samples_leaf': [1, 2]
+}
+xgb_params_new = {
+    'n_estimators': [100, 200, 500],
+    'max_depth': [3, 6, 10],
+    'learning_rate': [0.01, 0.1, 0.2],
+    'scale_pos_weight': [scale_pos_weight_new]  # This parameter addresses class imbalance.
+}
+
+# Perform Grid Search for the new Random Forest using 'f1' as scoring and class balancing.
+rf_grid_new = GridSearchCV(
+    RandomForestClassifier(random_state=42, class_weight='balanced'),
+    rf_params_new, cv=3, scoring='f1', n_jobs=-1
+)
+rf_grid_new.fit(X_train_new, y_train_new)
+rf_best_new = rf_grid_new.best_estimator_
+
+# Perform Grid Search for the new XGBoost using 'f1' as scoring.
+xgb_grid_new = GridSearchCV(
+    XGBClassifier(eval_metric='logloss', use_label_encoder=False),
+    xgb_params_new, cv=3, scoring='f1', n_jobs=-1
+)
+xgb_grid_new.fit(X_train_new, y_train_new)
+xgb_best_new = xgb_grid_new.best_estimator_
+
+# Evaluate the new models and store their metrics.
+metrics_rf_new = evaluate_model(rf_best_new, X_test_new, y_test_new, "New Random Forest (anxiety_diagnosis)")
+metrics_xgb_new = evaluate_model(xgb_best_new, X_test_new, y_test_new, "New XGBoost (anxiety_diagnosis)")
+
+###############################################
+# 5. Compare Old vs. New Models and Calculate Average Accuracy
+###############################################
+# Combine the metrics from all four models into a single DataFrame.
+comparison_data = {
+    "Old RF (suicidal)": metrics_rf_old,
+    "Old XGB (suicidal)": metrics_xgb_old,
+    "New RF (anxiety_diagnosis)": metrics_rf_new,
+    "New XGB (anxiety_diagnosis)": metrics_xgb_new,
+}
+comparison_df = pd.DataFrame(comparison_data).T
+print("Overall Model Comparison:")
+print(comparison_df)
+
+# Calculate the average accuracy across all models.
+avg_accuracy_suicidal = ( metrics_rf_old['Accuracy'] + metrics_xgb_old['Accuracy'] ) / 2
+avg_accuracy_anxiety = ( metrics_rf_new['Accuracy'] + metrics_xgb_new['Accuracy'] ) / 2
+print("Average Accuracy across all models: {:.4f}%".format(avg_accuracy_suicidal*100))
+print("Average Accuracy across all models: {:.4f}%".format(avg_accuracy_anxiety*100))

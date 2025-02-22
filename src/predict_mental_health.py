@@ -220,3 +220,19 @@ avg_accuracy_suicidal = ( metrics_rf_old['Accuracy'] + metrics_xgb_old['Accuracy
 avg_accuracy_anxiety = ( metrics_rf_new['Accuracy'] + metrics_xgb_new['Accuracy'] ) / 2
 print("Average Accuracy across all models: {:.4f}%".format(avg_accuracy_suicidal*100))
 print("Average Accuracy across all models: {:.4f}%".format(avg_accuracy_anxiety*100))
+
+# Plot a grouped bar chart for the performance metrics.
+metrics_list = ["Accuracy", "Precision", "Recall", "F1 Score", "ROC-AUC"]
+# Convert all metric values to numeric type.
+for metric in metrics_list:
+    comparison_df[metric] = pd.to_numeric(comparison_df[metric], errors='coerce')
+
+ax = comparison_df[metrics_list].plot(kind='bar', figsize=(12, 8))
+plt.title("Model Performance Comparison: Old vs New Pipelines")
+plt.ylabel("Score")
+plt.xticks(rotation=45, ha='right')
+plt.ylim(0, 1)
+plt.legend(title="Metrics", bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.savefig("models/model_comparison.png")
+plt.show()

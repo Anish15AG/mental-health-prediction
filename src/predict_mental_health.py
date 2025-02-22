@@ -73,3 +73,30 @@ def evaluate_model(model, X_test, y_test, model_name):
     print(f"ROC-AUC:   {roc}")
     print(classification_report(y_test, y_pred, zero_division=0))
     return {'Accuracy': acc, 'Precision': prec, 'Recall': rec, 'F1 Score': f1, 'ROC-AUC': roc}
+
+
+#D PIPELINE: Target = 'suicidal'
+###############################################
+# This section implements the original pipeline using 'suicidal' as the target.
+
+# Separate features and target. Remove the 'suicidal' column and 'id' from features.
+X_old = data.drop(columns=['suicidal', 'id'], errors='ignore')
+y_old = data['suicidal']
+
+# Use a Random Forest to determine feature importance and select the top 10 features.
+rf_fs_old = RandomForestClassifier(random_state=42)
+rf_fs_old.fit(X_old, y_old)
+fi_old = pd.DataFrame({'Feature': X_old.columns, 'Importance': rf_fs_old.feature_importances_})
+fi_old.sort_values(by='Importance', ascending=False, inplace=True)
+top_features_old = fi_old["Feature"].values[:10]
+X_old = X_old[top_features_old]
+
+# Split the data into training and testing sets.
+X_train_old, X_test_old, y_train_old, y_test_old = train_test_split(
+    X_old, y_old, test_size=0.2, random_state=42
+)
+
+# Standardize features using StandardScaler.
+scaler_old = StandardScaler()
+X_train_old = scaler_old.fit_transform(X_train_old)
+X_test_old = scaler_old.transform(X_test_old)

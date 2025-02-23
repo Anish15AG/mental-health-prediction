@@ -76,7 +76,9 @@ def generate_explanation(user_input, predictions):
                         "content": prompt
                     }
                 ],
-            })
+            }),
+            #Timeout parameter for API call
+            timeout=45 #Currently set at 45 seconds
         )
 
         response.raise_for_status()

@@ -80,10 +80,6 @@ def generate_explanation(user_input, predictions):
             }),
             #Timeout parameter for API call
             timeout=45, #Currently set at 45 seconds
-
-            #Token generation parameters
-            min_tokens=400, #Minimum Token Count for generation
-            max_tokens=1000 #Maximum Token Count for generation
         )
 
         response.raise_for_status()

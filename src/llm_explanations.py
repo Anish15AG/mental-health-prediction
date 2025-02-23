@@ -52,12 +52,13 @@ def generate_explanation(user_input, predictions):
             f"  - Random Forest: {rf_prediction}\n"
             f"  - XGBoost: {xgb_prediction}\n"
             #f"Based on this patient profile, especially the PHQ score of {phq_score} (Severity: {phq_severity}) and GAD score of {gad_score} (Severity: {gad_severity}), "
-            f"Please provide a very detailed and elaborate explanation of the model predictions. "
-            f"Pay close attention to the PHQ and GAD scores and highlight any discrepancies. "
-            f"Suggest at least 5-6 detailed coping mechanisms with specific instructions on how to implement them. "
-            f"Provide comprehensive advice on the next steps for seeking professional mental health support. "
-            f"Use bullet points and numbered lists to structure your response for clarity. "
-            f"Provide a very long and detailed response."
+            f"Please provide a concise explanation of the model predictions, focusing on the PHQ and GAD scores. "
+            f"Highlight any discrepancies. "
+            f"Suggest 3-4 specific coping mechanisms with brief instructions. "
+            f"Advise on next steps for professional evaluation. "
+            f"Keep the response under 200 words. "
+            f"Use bullet points to structure your response. "
+            f"Provide a response that is short and to the point."
         )
 
         response = requests.post(
